@@ -1,0 +1,9 @@
+.custom-variation-fields {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 10px;
+}
+.wrap-variation-field {
+	flex: 1 1 50%;
+}

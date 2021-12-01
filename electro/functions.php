@@ -43,19 +43,11 @@ function iconic_output_engraving_field()
   }
   $colors = explode(",", $product->get_attribute('pa_color'));
   $sizes = explode("|", $product->get_attribute('size'));
-
-  // $colors = wc_get_product_terms($product->id, 'pa_color', array('fields' => 'names'));
-  // $sizes = wc_get_product_terms($product->id, 'size', array('fields' => 'names'));
-  // foreach ($product->get_attributes() as $taxonomy => $attribute_obj) {
-  // Get the attribute label
-  // echo "<pre>";
-  // var_dump($sizes);
-  // echo "</pre>";
-  // $attribute_label_name = wc_attribute_label($taxonomy);
-
-  // Display attribute labe name
-  // echo '<p>' . $attribute_label_name . '</p>';
-  // }
+  $custom_attrs = array(
+    "colors" => $colors,
+    "sizes" => $sizes,
+  );
+  $_SESSION["custom_attrs"] = $custom_attrs;
 
 ?>
   <div class="wrap-variation-custom-fields">
@@ -64,7 +56,7 @@ function iconic_output_engraving_field()
       foreach ($colors as $key => $color) : ?>
         <div class="wrap-variation-field">
           <label for="variation-color-<?php echo trim($color) ?>"><?php _e($color, 'iconic'); ?></label>
-          <input class="input-text" type="number" inputmode="numeric" step="1" min="1" max="12" id="variation-color-<?php echo trim($color) ?>" name="variation-color-<?php echo $color ?>" placeholder="<?php _e("Enter quantity for {$color}", 'iconic'); ?>">
+          <input class="input-text" type="number" inputmode="numeric" step="1" min="0" max="12" <?php echo $key == 0 ? 'required' : null; ?> id="variation-color-<?php echo trim($color) ?>" name="variation-color-<?php echo trim($color) ?>" placeholder="<?php _e("Enter quantity for {$color}", 'iconic'); ?>">
         </div>
       <?php endforeach; ?>
     </div>
@@ -73,7 +65,7 @@ function iconic_output_engraving_field()
       foreach ($sizes as $key => $size) : ?>
         <div class="wrap-variation-field">
           <label for="variation-size-<?php echo trim($size) ?>"><?php _e($size, 'iconic'); ?></label>
-          <input class="input-text" type="number" inputmode="numeric" step="1" min="1" max="12" id="variation-size-<?php echo trim($size) ?>" name="variation-size-<?php echo $size ?>" placeholder="<?php _e("Enter quantity for {$size}", 'iconic'); ?>">
+          <input class="input-text" type="number" inputmode="numeric" step="1" min="0" max="12" id="variation-size-<?php echo trim($size) ?>" name="variation-size-<?php echo trim($size) ?>" placeholder="<?php _e("Enter quantity for {$size}", 'iconic'); ?>">
         </div>
       <?php endforeach; ?>
     </div>
@@ -90,8 +82,8 @@ add_action('woocommerce_before_add_to_cart_button', 'iconic_output_engraving_fie
 function iconic_add_engraving_text_to_cart_item($cart_item_data, $product_id, $variation_id)
 {
   // global $product;
-  $colors = explode(",", get_post_meta($product_id, 'pa_color', true));
-  $sizes = explode(",", get_post_meta($product_id, 'size', true));
+  $colors = $_SESSION["custom_attrs"]["colors"];
+  $sizes = $_SESSION["custom_attrs"]["sizes"];
   // $sizes = explode("|", $product->get_attribute('size'));
   foreach ($colors as $color) {
     $post_input = "variation-color-" . trim($color);
@@ -127,43 +119,31 @@ add_filter('woocommerce_add_cart_item_data', 'iconic_add_engraving_text_to_cart_
  */
 function iconic_display_engraving_text_cart($item_data, $cart_item)
 {
-  $product_id = $cart_item["product_id"];
-  $colors = explode(",", get_post_meta($product_id, 'pa_color', true));
-  $sizes = explode(",", get_post_meta($product_id, 'size', true));
+  $colors = $_SESSION["custom_attrs"]["colors"];
+  $sizes = $_SESSION["custom_attrs"]["sizes"];
 
   foreach ($colors as $color) {
     $post_input = "variation-color-" . trim($color);
-    if (in_array($post_input, $cart_item)) {
+    if (array_key_exists($post_input, $cart_item)) {
       $item_data[] = array(
         'key'     => __(trim($color), 'iconic'),
         'value'   => wc_clean($cart_item[$post_input]),
         'display' => '',
       );
     }
-    // return $cart_item_data;
   }
   foreach ($sizes as $size) {
     $post_input = "variation-size-" . trim($size);
-    if (in_array($post_input, $cart_item)) {
+    if (array_key_exists($post_input, $cart_item)) {
       $item_data[] = array(
         'key'     => __(trim($size), 'iconic'),
         'value'   => wc_clean($cart_item[$post_input]),
         'display' => '',
       );
     }
-    // return $cart_item_data;
   }
-  // if (empty($cart_item['iconic-engraving'])) {
-  //   return $item_data;
-  // }
-
-  // $item_data[] = array(
-  //   'key'     => __('Engravings', 'iconic'),
-  //   'value'   => wc_clean($cart_item['iconic-engraving']),
-  //   'display' => '',
-  // );
 
   return $item_data;
 }
 
-// add_filter('woocommerce_get_item_data', 'iconic_display_engraving_text_cart', 10, 2);
+add_filter('woocommerce_get_item_data', 'iconic_display_engraving_text_cart', 10, 2);
